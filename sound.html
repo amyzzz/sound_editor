@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Le styles -->
+    <!-- styles -->
     <link href="bootstrap.css" rel="stylesheet">
     <style>
       body {
@@ -15,6 +15,7 @@
       }
     </style>
     <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link rel="shortcut icon" href="bootstrap/ico/favicon.ico">
   </head>
   <body>
     
@@ -42,15 +43,210 @@
             <div class="btn-group">
               <a class="btn btn-success" onclick="$('#audioLayerControl')[0].selectAll();"><i class="icon-resize-horizontal icon-white"></i> Select All</a>
             </div>
-            <div class="upload">
-                <form name="myWebForm"action="mailto:azheng@berkeley.edu"method="post">
-                <input type="file"name="uploadField"/>
+            <script type="text/javascript">
+            function beatsSearch() {
+                var name = document.getElementById("search");
+                var type = document.getElementById("Choose one:");
+                var oRequest = new XMLHttpRequest();
+                var sURL = "https://partner.api.beatsmusic.com/v1/api/search?q="
+                  + name
+                  + "&type="
+                  + type
+                  + "&client_id=9rffwyv2zkcu5s4ruafkry7k";
+
+                oRequest.open("GET",sURL,false);
+                oRequest.setRequestHeader("User-Agent",navigator.userAgent);
+                oRequest.send();
+                var result = oRequest.responseXML;
+
+                if (oRequest.status==200) alert(oRequest.responseText);
+                else alert("Error executing XMLHttpRequest call!");
+                document.write("Please copy track id:");
+                alert(result.replace(/<&#91;^>&#93;*>/g, ""));
+                var id = window.prompt("Paste track id here", "");
+                if (id!=null) {
+                  var URL = "https://partner.api.beatsmusic.com/v1/api/tracks/"
+                  + id + "/audio?&access_token=9rffwyv2zkcu5s4ruafkry7k"
+                  oRequest.open("GET",URL,false);
+                  oRequest.setRequestHeader("User-Agent",navigator.userAgent);
+                  oRequest.send();
+                }
+              }
+            </script>
+            <div class="beats-search">
+                <form name="input" action="beatsSearch()" method="post">
+                Beats Music: <input type="text" id="search" />
+                <select name="Choose one:">
+                <option value="artist">Artist</option>
+                <option value="genre">Genre</option>
+                <option value="album">Album</option>
+                <option value="track">Track</option>
+                <option value="playlist">Playlist</option>
+                <option value="user">User</option>
+                <input type="submit" value="Search" />
                 </form>
+            </div>
+            <div class="upload">
+                <form enctype="multipart/form-data"action="upload_file.php"method="post">
+                <p>OR Browse:</p>
+                <input type="file" name="uploaded_file">
+                <br></br>
+                <input type="submit"value="Upload">
             </div>
           </div>
         </center>
         </div>
       </div>
+      <hr />
+      <div class="row">
+        <div class="span4">
+          <h6>Spectrum</h6>
+          <div class="well">
+            <div id="spectrum"></div>
+          </div>
+        </div>
+        <div class="span8">
+          <h6>Editor</h6>
+          <div class="well">
+             <audioLayerControl id="audioLayerControl" title="CloudCompany.mp3" />
+          </div>
+          <div id="editor">
+                <div id="editorbox">
+                    <audioLayerControl id="audioLayerControl" title="CloudCompany.mp3" />
+                </div>
+            </div>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="span12">
+          <center>
+            <div class="btn-toolbar">
+              <div class="btn-group">
+                <a id="btn_play" class="btn btn-success btn-large" onclick="$('#audioLayerControl')[0].play()" rel="tooltip" title="first tooltip"><i class="icon-play icon-white"></i>Play</a>
+                <a id="btn_pause" class="btn btn-success btn-large disabled"><i class="icon-pause icon-white"></i>Pause</a>
+                <a id="btn_stop" class="btn btn-success btn-large" onclick="$('#audioLayerControl')[0].stop()"><i class="icon-stop icon-white"></i>Stop</a>
+                <a id="btn_loop" class="btn btn-warning btn-large" data-toggle="button" onclick="$('#audioLayerControl')[0].toggleLoop();"><i class="icon-repeat icon-white"></i>Loop</a>
+              </div>
+              <div class="btn-group">
+                <a class="btn btn-large btn-success disabled" id="savelink" download="export.wav"><i class="icon-download"></i> I love it! Save now</a>
+              </div>
+            </div>
+          </center>
+        </div>
+      </div>
     </div>
+    <script type="text/javascript">
+		function sendFile(file)
+		{
+			var uri = "upload.php";
+			var xhr = new XMLHttpRequest();
+			var fd = new FormData();
+		  
+			xhr.upload.addEventListener("progress", progressFunction, false);
+		  
+			xhr.open("POST", uri, true);
+			xhr.onreadystatechange = function()
+			{
+				if (xhr.readyState == 4 && xhr.status == 200)
+				{
+					// Handle response.
+					//alert(xhr.responseText);
+					var percentageDiv = document.getElementById("report");
+		   percentageDiv.innerHTML = 'Transfer complete';
+				}
+			}
+			fd.append('myFile', file);
+			// Initiate a multipart/form-data upload
+			xhr.send(fd);
+		}
+ 
+		window.onload = function()
+		{
+			var dropzone = document.getElementById("dropzone");
+			dropzone.ondragover = dropzone.ondragenter = function(event)
+			{
+				event.stopPropagation();
+				event.preventDefault();
+			}
+	
+			dropzone.ondrop = function(event)
+			{
+				event.stopPropagation();
+				event.preventDefault();
+ 
+				var filesArray = event.dataTransfer.files;
+				for (var i=0; i<filesArray.length; i++)
+				{
+				 var progressDiv = document.getElementById('progressDiv');
+				 var pbar = document.createElement('progress');
+				 var br = document.createElement('br');
+				 var report = document.createElement('div');
+				
+				 pbar.setAttribute('id', 'progressBar' + i);
+				 pbar.setAttribute('value', '0');
+				 pbar.setAttribute('max', '100');
+				 report.setAttribute('id', 'report' + i)
+				
+				 progressDiv.appendChild(pbar);
+				 progressDiv.appendChild(br);
+				 progressDiv.appendChild(report);
+				 progressDiv.appendChild(br);
+				
+				 sendFile(filesArray[i]);
+			 }
+		 }
+		}
+	  
+		function progressFunction(evt)
+		{
+			var progressBar = document.getElementById('progressBar' + i);
+			var percentageDiv = document.getElementById('report' + i);
+			if (evt.lengthComputable)
+			{
+            progressBar.max = evt.total;
+				progressBar.value = evt.loaded;
+				percentageDiv.innerHTML = Math.round(evt.loaded / evt.total * 100) + "%";
+			}
+		}
+    </script>
+    
+    <script src="bootstrap/js/bootstrap-button.js"></script>
+    <script type="text/javascript" src="app/js/ACFIRFilter.js"></script>
+    <script type="text/javascript" src="app/js/ACAAFilter.js"></script> 
+    <script type="text/javascript" src="app/js/ACSpectrum.js"></script>    
+    <script type="text/javascript" src="app/js/ACFFT.js"></script>
+    <script type="text/javascript" src="app/js/SpectrumWorker.js"></script>
+    <script type="text/javascript" src="app/js/SpectrumDisplay.js"></script>
+    <script type="text/javascript" src="app/js/audioplayback.js"></script>
+    <script type="text/javascript" src="app/js/filedropbox.js"></script>
+    <script type="text/javascript" src="app/js/fft.js"></script>
+    <script type="text/javascript" src="app/js/audioLayerControl.js"></script>
+    <script type="text/javascript" src="app/js/audiosequence.js"></script>
+    <script type="text/javascript" src="app/js/AudioSequenceEditor.js"></script>
+    <script type="text/javascript" src="app/js/mathutilities.js"></script>
+    <script type="text/javascript" src="app/js/wavetrack.js"></script>
+    <script type="text/javascript" src="app/js/binarytoolkit.js"></script>
+    <script type="text/javascript" src="app/js/filesystemutility.js"></script>
+    <script type="text/javascript" src="app/js/editorapp.js"></script>
+    
+    <script type="text/javascript">
+      $(window).load(function()
+      {
+        var supportLabel =  $('#browser_support')[0];
+
+        if (typeof(webkitAudioContext) === 'undefined')
+        {
+          supportLabel.className = "label label-important";
+          supportLabel.innerHTML = 'no web audio API support. try the latest Google Chrome build.';
+        }
+        else
+        {
+          supportLabel.className = "label label-success";
+          supportLabel.innerHTML = 'you have web audio API support.';
+        }
+
+      });
+    </script>
   </body>
 </html>
